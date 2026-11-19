@@ -1,13 +1,65 @@
+
+"""Student grade utilities used in Lab 7 fuzz testing."""
+
+import re
+
+
 def average_marks(marks_csv):
-    marks = [int(m) for m in marks_csv.split(',')]
+    """Return average marks, or None for invalid input."""
+    if not isinstance(marks_csv, str):
+        return None
+
+    values = [part.strip() for part in marks_csv.split(",")]
+
+    if not values or any(value == "" for value in values):
+        return None
+
+    try:
+        marks = [int(value) for value in values]
+    except ValueError:
+        return None
+
+    if any(mark < 0 or mark > 100 for mark in marks):
+        return None
+
     return round(sum(marks) / len(marks), 2)
 
+
 def parse_srn(srn):
-    return srn[:4], int(srn[6:8]), srn[8:10]
+    """Return campus, year and department, or None if invalid."""
+    if not isinstance(srn, str):
+        return None
+
+    match = re.fullmatch(
+        r"(PES\d)UG(\d{2})([A-Z]{2})\d{3}",
+        srn
+    )
+
+    if match is None:
+        return None
+
+    campus, year, department = match.groups()
+
+    return campus, int(year), department
+
 
 def short_name(full_name):
-    first, last = full_name.split()
+    """Convert a two-word name into an abbreviated name."""
+    if not isinstance(full_name, str):
+        return None
+
+    parts = full_name.split()
+
+    if len(parts) != 2:
+        return None
+
+    first, last = parts
+
+    if not first.isalpha() or not last.isalpha():
+        return None
+
     return first[0].upper() + ". " + last.capitalize()
+
 
 def main():
     print("==== Running average_marks ====")
@@ -24,6 +76,7 @@ def main():
     user_input = input("Enter first and last name (e.g. ravi kumar): ")
     result = short_name(user_input)
     print("Short Name:", result)
+
 
 if __name__ == "__main__":
     main()
